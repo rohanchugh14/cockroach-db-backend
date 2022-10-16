@@ -1,8 +1,13 @@
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
+const express = require('express');
+const app = express();
+const bodyParser = require("body-parser");
+const operations = require("./operations");
+
 
 var accountValues = Array(3);
-
+app.use(bodyParser.json());
 // Wrapper for a transaction.  This automatically re-calls the operation with
 // the client as an argument as long as the database server asks for
 // the transaction to be retried.
@@ -99,7 +104,8 @@ async function deleteAccounts(client, callback) {
 }
 
 // Run the transactions in the connection pool
-(async () => {
+// (async () => {
+async function run() {
   const connectionString = process.env.DATABASE_URL;
   const pool = new Pool({
     connectionString,
@@ -108,7 +114,8 @@ async function deleteAccounts(client, callback) {
 
   // Connect to database
   const client = await pool.connect();
-
+  const selectBalanceStatement = "SELECT id, balance FROM accounts;";
+  await client.query(selectBalanceStatement, callback);
   // Callback
   function cb(err, res) {
     if (err) throw err;
@@ -133,6 +140,71 @@ async function deleteAccounts(client, callback) {
   console.log("Deleting a row...");
   await retryTxn(0, 15, client, deleteAccounts, cb);
 
+  console.log("Adding ranch...");
+  // await operations.addRanch(client, cb, "Ranch 1", "https://ranch1.com", "Ranch 1 fdasfdasfdis a ranch", "https://ranch1.com/img.png");
   // Exit program
-  process.exit();
-})().catch((err) => console.log(err.stack));
+
+  // process.exit();
+}
+// run().catch((err) => console.log(err.stack));
+const connectionString = process.env.DATABASE_URL;
+  const pool = new Pool({
+    connectionString,
+    application_name: "$ docs_simplecrud_node-postgres",
+  });
+let client;
+  // Connect to database
+async function init() {
+  client = await pool.connect();
+}
+init();
+
+
+
+
+app.get('/ranch/random', async (request, response) => {
+  function cb(err, res) {
+    if (err) {
+      console.log(err);
+      response.status(500).send(err);
+    } else {
+      response.json(res);
+    }
+  }
+
+  operations.getRandomRanch(client, cb);
+})
+
+app.post('/ranch', (request, response) => {
+    let body = request.body
+    function cb(err, res) {
+      if (err) {
+        console.log(err);
+        response.status(500).send(err);
+      } else {
+        response.json(body);
+      }
+    }
+    // log type of body
+    operations.addRanch(client, cb, body.name, body.url, body.about, body.imgUrl);
+})
+
+app.put('/ranch/match', (request, response) => {
+  let body = request.body
+  function cb(err, res) {
+    if (err) {
+      console.log(err);
+      response.status(500).send(err);
+    } else {
+      response.json(res);
+    }
+  }
+  // log type of body
+  operations.updateElo(client, cb, body.winner, body.loser);
+});
+
+
+const PORT = 3030
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})

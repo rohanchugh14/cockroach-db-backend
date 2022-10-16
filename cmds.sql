@@ -1,0 +1,2 @@
+DELETE FROM elo;
+DELETE FROM ranch;
