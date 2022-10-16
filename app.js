@@ -163,6 +163,7 @@ init();
 
 
 app.get('/ranch/random', async (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
   function cb(err, res) {
     if (err) {
       console.log(err);
@@ -176,6 +177,7 @@ app.get('/ranch/random', async (request, response) => {
 })
 
 app.post('/ranch', (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
     let body = request.body
     function cb(err, res) {
       if (err) {
@@ -190,6 +192,7 @@ app.post('/ranch', (request, response) => {
 })
 
 app.put('/ranch/match', (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
   let body = request.body
   function cb(err, res) {
     if (err) {
